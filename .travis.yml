@@ -1,3 +1,6 @@
+before_script:
+  - mysql -e 'create database mifosplatform-tenants;'
+  - mysql -e 'create database mifostenant-default;'
 language: java
 jdk:
   - openjdk6

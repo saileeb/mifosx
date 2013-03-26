@@ -34,7 +34,6 @@ DROP TABLE IF EXISTS `m_loan_collateral`;
 DROP TABLE IF EXISTS `m_loan_officer_assignment_history`;
 DROP TABLE IF EXISTS `m_loan_repayment_schedule`;
 DROP TABLE IF EXISTS `m_loan_transaction`;
-DROP TABLE IF EXISTS `m_calendar`;
 DROP TABLE IF EXISTS `m_note`;
 DROP TABLE IF EXISTS `m_office`;
 DROP TABLE IF EXISTS `m_office_transaction`;
@@ -47,6 +46,7 @@ DROP TABLE IF EXISTS `m_product_loan_charge`;
 DROP TABLE IF EXISTS `m_role`;
 DROP TABLE IF EXISTS `m_role_permission`;
 DROP TABLE IF EXISTS `m_savings_account`;
+DROP TABLE IF EXISTS `m_savings_account_transaction`;
 DROP TABLE IF EXISTS `m_savings_product`;
 DROP TABLE IF EXISTS `m_staff`;
 DROP TABLE IF EXISTS `ref_loan_transaction_processing_strategy`;
@@ -289,6 +289,7 @@ CREATE TABLE `m_portfolio_command_source` (
   `group_id` bigint(20) DEFAULT NULL,
   `client_id` bigint(20) DEFAULT NULL,
   `loan_id` bigint(20) DEFAULT NULL,
+  `savings_account_id` bigint(20) DEFAULT NULL,
   `api_get_url` varchar(100) NOT NULL,
   `resource_id` bigint(20) DEFAULT NULL,
   `subresource_id` bigint(20) DEFAULT NULL,
@@ -729,6 +730,7 @@ CREATE TABLE `m_savings_product` (
   UNIQUE KEY `sp_unq_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
 CREATE TABLE `m_savings_account` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `account_no` varchar(20) NOT NULL,
@@ -736,6 +738,8 @@ CREATE TABLE `m_savings_account` (
   `client_id` bigint(20) DEFAULT NULL,
   `group_id` bigint(20) DEFAULT NULL,
   `product_id` bigint(20) DEFAULT NULL,
+  `status_enum` SMALLINT(5) NOT NULL DEFAULT 300,
+  `activation_date` DATE DEFAULT NULL,
   `currency_code` varchar(3) NOT NULL,
   `currency_digits` smallint(5) NOT NULL,
   `nominal_interest_rate_per_period` decimal(19,6) NOT NULL,
@@ -744,6 +748,11 @@ CREATE TABLE `m_savings_account` (
   `min_required_opening_balance` decimal(19,6) DEFAULT NULL,
   `lockin_period_frequency` decimal(19,6) DEFAULT NULL,
   `lockin_period_frequency_enum` smallint(5) DEFAULT NULL,
+  `lockedin_until_date_derived` DATE DEFAULT NULL,
+  `total_deposits_derived` decimal(19,6) DEFAULT NULL,
+  `total_withdrawals_derived` decimal(19,6) DEFAULT NULL,
+  `total_interest_posted_derived` decimal(19,6) DEFAULT NULL,
+  `account_balance_derived` decimal(19,6) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sa_account_no_UNIQUE` (`account_no`),
   UNIQUE KEY `sa_externalid_UNIQUE` (`external_id`),
@@ -754,6 +763,19 @@ CREATE TABLE `m_savings_account` (
   CONSTRAINT `FKSA00000000000002` FOREIGN KEY (`group_id`) REFERENCES `m_group` (`id`),
   CONSTRAINT `FKSA00000000000003` FOREIGN KEY (`product_id`) REFERENCES `m_savings_product` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `m_savings_account_transaction` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `savings_account_id` bigint(20) NOT NULL,
+  `transaction_type_enum` smallint(5) NOT NULL,
+  `transaction_date` date NOT NULL,
+  `amount` decimal(19,6) NOT NULL,
+  `is_reversed` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKSAT0000000001` (`savings_account_id`),
+  CONSTRAINT `FKSAT0000000001` FOREIGN KEY (`savings_account_id`) REFERENCES `m_savings_account` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- end of savings account related tables
 
 -- DDL for notes associated with all client/group and financial accounts
